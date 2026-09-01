@@ -2,16 +2,11 @@ import { useState } from "react";
 import api from "../services/api";
 import type { User } from "../types";
 
-type LoginProps = {
+type Props = {
   onLogin: (token: string, user: User) => void;
 };
 
-type LoginResponse = {
-  token: string;
-  user: User;
-};
-
-function Login({ onLogin }: LoginProps) {
+function Login({ onLogin }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -22,25 +17,20 @@ function Login({ onLogin }: LoginProps) {
     event.preventDefault();
 
     try {
-      const response = await api.post<LoginResponse>("/auth/login", {
-        email,
+      const response = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
         password,
       });
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
       onLogin(response.data.token, response.data.user);
     } catch (error: any) {
-      setMessage(
-        error.response?.data?.msg || "Login failed"
-      );
+      setMessage(error.response?.data?.msg || "Login failed");
     }
   }
 
   return (
     <div className="card">
-      <h2>School ERP Login</h2>
+      <h2>Login</h2>
 
       <form onSubmit={handleSubmit}>
         <input

@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Login from "./components/Login";
-import AddStudent from "./components/AddStudent";
-import StudentList from "./components/StudentList";
+import AdminDashboard from "./components/AdminDashboard";
+import TeacherDashboard from "./components/TeacherDashboard";
+import StudentDashboard from "./components/StudentDashboard";
 import type { User } from "./types";
-import "./App.css";
 
 function App() {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
     const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+    const savedToken = localStorage.getItem("token");
+
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+    }
+
+    setLoading(false);
+  }, []);
 
   function handleLogin(token: string, loggedInUser: User) {
     localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(loggedInUser));
     setUser(loggedInUser);
   }
 
@@ -22,33 +32,28 @@ function App() {
     setUser(null);
   }
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   if (!user) {
-    return (
-      <main className="container">
-        <Login onLogin={handleLogin} />
-      </main>
-    );
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
-    <main className="container">
-      <header className="header">
-        <div>
-          <h1>School ERP</h1>
-          <p>
-            Welcome, {user.name} ({user.role})
-          </p>
-        </div>
-
-        <button onClick={logout}>Logout</button>
-      </header>
-
+    <>
       {user.role === "admin" && (
-        <AddStudent onStudentAdded={() => window.location.reload()} />
+        <AdminDashboard user={user} onLogout={logout} />
       )}
 
-      <StudentList />
-    </main>
+      {user.role === "teacher" && (
+        <TeacherDashboard user={user} onLogout={logout} />
+      )}
+
+      {user.role === "student" && (
+        <StudentDashboard user={user} onLogout={logout} />
+      )}
+    </>
   );
 }
 
